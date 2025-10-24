@@ -1,0 +1,18 @@
+name: xcube-icosdp
+channels:
+  - conda-forge
+dependencies:
+  # Python
+  - python >=3.10
+  # Required
+  - xcube
+  # Development Dependencies - Tools
+  - black
+  - isort
+  - pytest
+  - pytest-cov
+  - ruff
+  # Development Dependencies - Demos
+  - jupyterlab
+  - matplotlib
+
