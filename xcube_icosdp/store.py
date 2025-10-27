@@ -33,6 +33,7 @@ from xcube.core.store import (
     DataType,
     DataTypeLike,
 )
+from xcube.core.chunk import chunk_dataset
 from xcube.util.jsonschema import (
     JsonArraySchema,
     JsonDateSchema,
@@ -171,6 +172,8 @@ class IcosdpDataStore(DataStore):
             ds = xr.open_dataset(
                 MAPPING_NONAGG_DATA_ID_URI[data_id], engine="zarr", chunks={}
             )
+            ds = ds.unify_chunks()
+            chunks = {str(dim): sizes[0] for dim, sizes in ds.chunksizes.items()}
             time_range = open_params.get("time_range")
             if time_range:
                 dt_start = np.datetime64(time_range[0], "ns")
@@ -180,7 +183,6 @@ class IcosdpDataStore(DataStore):
                         f"Invalid time range {time_range!r}. Start date must be before end date."
                     )
                 ds = ds.sel(time=slice(dt_start, dt_end))
-                ds =
             bbox = open_params.get("bbox")
             if bbox:
                 if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
@@ -188,6 +190,8 @@ class IcosdpDataStore(DataStore):
                         f"Invalid bbox {bbox!r}. West must be smaller East and South must be smaller West."
                     )
                 ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
+            if time_range or bbox:
+                ds = chunk_dataset(ds, chunks, format_name="zarr")
         else:
             raise DataStoreError(
                 "Only aggregation mode '005_hourly' supported so far. "
