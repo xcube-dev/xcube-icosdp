@@ -84,7 +84,7 @@ class IcosdpDataStoreTest(unittest.TestCase):
         self.assertEqual("EPSG:4326", descriptor.crs)
         self.assertEqual((-180, -90, 180, 90), descriptor.bbox)
         self.assertEqual(
-            ("2001-01-01T00:00:00", "2021-12-31T00:00:00"), descriptor.time_range
+            ("2001-01-01T00:00:00Z", "2021-12-31T00:00:00Z"), descriptor.time_range
         )
 
     def test_get_data_opener_ids(self):
