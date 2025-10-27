@@ -23,23 +23,25 @@ from typing import Any, Container, Iterator, Tuple
 
 import icoscp_core.icos
 import numpy as np
+import pandas as pd
 import xarray as xr
 from xcube.core.store import (
     DataDescriptor,
+    DatasetDescriptor,
     DataStore,
     DataStoreError,
-    DataTypeLike,
     DataType,
+    DataTypeLike,
 )
 from xcube.util.jsonschema import (
     JsonArraySchema,
-    JsonObjectSchema,
     JsonDateSchema,
-    JsonStringSchema,
     JsonNumberSchema,
+    JsonObjectSchema,
+    JsonStringSchema,
 )
 
-from .constants import MAPPING_NONAGG_DATA_ID_URI, ICOSDP_DATA_OPENER_ID
+from .constants import ICOSDP_DATA_OPENER_ID, MAPPING_NONAGG_DATA_ID_URI
 
 
 class IcosdpDataStore(DataStore):
@@ -95,7 +97,21 @@ class IcosdpDataStore(DataStore):
     def describe_data(
         self, data_id: str, data_type: DataTypeLike = None
     ) -> DataDescriptor:
-        raise NotImplementedError("Coming soon")
+        self._assert_valid_data_type(data_type)
+        ds = self.open_data(data_id)
+        schema = self.get_open_data_params_schema(data_id=data_id)
+        return DatasetDescriptor(
+            data_id,
+            crs="EPSG:4326",
+            bbox=(-180, -90, 180, 90),
+            time_range=(
+                pd.to_datetime(ds.time[0].item()).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                pd.to_datetime(ds.time[-1].item()).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            ),
+            dims={str(k): int(v) for k, v in ds.sizes.items()},
+            attrs=ds.attrs,
+            open_params_schema=schema,
+        )
 
     def get_data_opener_ids(
         self, data_id: str = None, data_type: DataTypeLike = None
@@ -108,15 +124,15 @@ class IcosdpDataStore(DataStore):
         params = dict(
             aggregation=JsonStringSchema(
                 title="Aggregation mode",
-                description="Note that '005_daily' is the non-aggregated dataset.",
+                description="Note that '005_hourly' is the non-aggregated dataset.",
                 enum=[
-                    "005_daily",
+                    "005_hourly",
                     # "050_monthly",
                     # "025_monthlycycle",
                     # "025_daily",
                     # "005_monthly",
                 ],
-                default="005_daily",
+                default="005_hourly",
             ),
             time_range=JsonDateSchema.new_range(
                 min_date="2001-01-01", max_date="2021-12-31", nullable=True
@@ -150,9 +166,11 @@ class IcosdpDataStore(DataStore):
         schema = self.get_open_data_params_schema(data_id=data_id, opener_id=opener_id)
         schema.validate_instance(open_params)
 
-        agg_mode = open_params.get("aggregation", "005_daily")
-        if agg_mode is "005_daily":
-            ds = xr.open_dataset(MAPPING_NONAGG_DATA_ID_URI[data_id])
+        agg_mode = open_params.get("aggregation", "005_hourly")
+        if agg_mode == "005_hourly":
+            ds = xr.open_dataset(
+                MAPPING_NONAGG_DATA_ID_URI[data_id], engine="zarr", chunks={}
+            )
             time_range = open_params.get("time_range")
             if time_range:
                 dt_start = np.datetime64(time_range[0], "ns")
@@ -162,6 +180,7 @@ class IcosdpDataStore(DataStore):
                         f"Invalid time range {time_range!r}. Start date must be before end date."
                     )
                 ds = ds.sel(time=slice(dt_start, dt_end))
+                ds =
             bbox = open_params.get("bbox")
             if bbox:
                 if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
@@ -170,7 +189,9 @@ class IcosdpDataStore(DataStore):
                     )
                 ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
         else:
-            raise DataStoreError("Only aggregation mode '05_daily' supportded so far. ")
+            raise DataStoreError(
+                "Only aggregation mode '005_hourly' supported so far. "
+            )
         return ds
 
     def search_data(self, data_type: DataTypeLike = None, **search_params):

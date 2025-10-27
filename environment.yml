@@ -5,6 +5,9 @@ dependencies:
   # Python
   - python >=3.10
   # Required
+  - numpy
+  - pandas
+  - xarray
   - xcube
   # Development Dependencies - Tools
   - black
@@ -16,3 +19,7 @@ dependencies:
   - jupyterlab
   - matplotlib
 
+  # Required, but only available via pip
+  - pip
+  - pip:
+      - icoscp_core
