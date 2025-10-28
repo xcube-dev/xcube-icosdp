@@ -33,16 +33,16 @@ To improve usability, the data is available through:
 ✅ Pre-computed spatial & temporal aggregations
 
 
-### Native full-Resolution Dataset
+### Native Full-Resolution Dataset
 
-- **005_hourly** — 0.05° spatial, hourly temporal resolution for years 2001–2021 (~3 TB)
+- **005_hourly** — 0.05° spatial and hourly temporal resolution for 2001–2021 (~3 TB)
 
-Dimensions: `(time, hour, lat, lon)` All files include `land_fraction`.
+Each dataset has dimensions `(time, hour, lat, lon)` and includes a `land_fraction` variable.
 
-Access is provided via publicly accessible **Zarr** data in an object storage hosted by
+The data is stored in **Zarr** format on a publicly accessible object storage hosted by
 [DKRZ](https://www.dkrz.de/en/dkrz-partner-for-climate-research?set_language=en).
-Thus the dataset is stored in a cloud-optimized format which allows spatial and temporal
-subsetting. No authentication is required.
+It is **cloud-optimized**, allowing efficient spatial and temporal subsetting.
+No authentication is required to access the dataset.
 
 
 ### Aggregated Products
@@ -53,14 +53,13 @@ All aggregated datasets are distributed through the
 
 Current aggregations:
 
-| Dataset              | Spatial Resolution | Temporal Resolution        | Size per Year |
-|----------------------|--------------------|----------------------------|---------------|
-| **050_monthly**      | 0.5°               | Monthly                    | ~5 MB         |
-| **025_monthlycycle** | 0.25°              | Monthly mean diurnal cycle | ~270 MB       |
-| **025_daily**        | 0.25°              | Daily                      | ~380 MB       |
-| **005_monthly**      | 0.05°              | Monthly                    | ~450 MB       |
+| Dataset              | Spatial Resolution | Temporal Resolution        | Size per Year | Dimensions |
+|----------------------|--------------------|----------------------------|---------------|------------|
+| **050_monthly**      | 0.5°               | Monthly                    | ~5 MB         |`(time, lat, lon)`|
+| **025_monthlycycle** | 0.25°              | Monthly mean diurnal cycle | ~270 MB       |`(time, hour, lat, lon)`|
+| **025_daily**        | 0.25°              | Daily                      | ~380 MB       |`(time, lat, lon)`|
+| **005_monthly**      | 0.05°              | Monthly                    | ~450 MB       |`(time, lat, lon)`|
 
-Dimensions: `(time, lat, lon)` or `(time, hour, lat, lon)` for *025_monthlycycle*
 All files include `land_fraction`.
 
 ---
