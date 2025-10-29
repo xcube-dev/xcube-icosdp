@@ -17,7 +17,7 @@ keywords = [
   "dask",
   "parallel processing",
 ]
-license = {text = "MIT"}
+license = { text = "GPL-3.0-or-later" }
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Science/Research",
