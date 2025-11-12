@@ -1,0 +1,10 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "lat",
+        "lon"
+    ],
+    "description": "fraction of land for which NEE is defined",
+    "long_name": "land_area_fraction",
+    "standard_name": "land_area_fraction",
+    "units": "1"
+}

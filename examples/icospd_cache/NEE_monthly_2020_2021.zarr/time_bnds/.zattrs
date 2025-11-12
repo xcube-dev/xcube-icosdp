@@ -1,0 +1,8 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "time",
+        "nbnds"
+    ],
+    "calendar": "proleptic_gregorian",
+    "units": "days since 2001-01-01"
+}
