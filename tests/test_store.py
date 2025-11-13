@@ -52,19 +52,27 @@ class IcosdpDataStoreTest(unittest.TestCase):
 
     def test_get_data_ids(self):
         store = new_data_store(DATA_STORE_ID)
-        self.assertCountEqual(["NEE", "GPP", "ET", "ET_T"], store.get_data_ids())
+        self.assertCountEqual(
+            [
+                "FLUXCOM-X-BASE_NEE",
+                "FLUXCOM-X-BASE_GPP",
+                "FLUXCOM-X-BASE_ET",
+                "FLUXCOM-X-BASE_ET_T",
+            ],
+            store.get_data_ids(),
+        )
 
     def test_has_data(self):
         store = new_data_store(DATA_STORE_ID)
-        self.assertTrue(store.has_data("NEE"))
-        self.assertTrue(store.has_data("GPP"))
-        self.assertFalse(store.has_data("GPP2"))
+        self.assertTrue(store.has_data("FLUXCOM-X-BASE_NEE"))
+        self.assertTrue(store.has_data("FLUXCOM-X-BASE_GPP"))
+        self.assertFalse(store.has_data("FLUXCOM-X-BASE_NEE2"))
 
     @patch("xarray.open_dataset")
     def test_describe_data(self, mock_open_dataset):
         mock_open_dataset.return_value = get_hourly_005_dataseet()
         store = new_data_store(DATA_STORE_ID)
-        descriptor = store.describe_data("NEE")
+        descriptor = store.describe_data("FLUXCOM-X-BASE_NEE")
         mock_open_dataset.assert_called_once_with(
             (
                 "https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/"
@@ -74,7 +82,7 @@ class IcosdpDataStoreTest(unittest.TestCase):
             chunks={},
         )
         self.assertIsInstance(descriptor, DatasetDescriptor)
-        self.assertEqual("NEE", descriptor.data_id)
+        self.assertEqual("FLUXCOM-X-BASE_NEE", descriptor.data_id)
         self.assertEqual("dataset", descriptor.data_type.alias)
         self.assertEqual("EPSG:4326", descriptor.crs)
         self.assertEqual((-180, -90, 180, 90), descriptor.bbox)
@@ -90,7 +98,6 @@ class IcosdpDataStoreTest(unittest.TestCase):
         store = new_data_store(DATA_STORE_ID)
         schema = store.get_open_data_params_schema()
         self.assertIsInstance(schema, JsonObjectSchema)
-        self.assertIn("aggregation", schema.properties)
         self.assertIn("time_range", schema.properties)
         self.assertIn("bbox", schema.properties)
 
@@ -100,7 +107,7 @@ class IcosdpDataStoreTest(unittest.TestCase):
         store = new_data_store(DATA_STORE_ID)
 
         # default
-        ds = store.open_data("NEE")
+        ds = store.open_data("FLUXCOM-X-BASE_NEE")
         self.assertIsInstance(ds, xr.Dataset)
         self.assertCountEqual(["NEE", "land_fraction"], list(ds.data_vars))
         self.assertEqual((7670, 24, 3600, 7200), ds["NEE"].shape)
@@ -116,7 +123,9 @@ class IcosdpDataStoreTest(unittest.TestCase):
 
         # sub-setting with opening parameters
         ds = store.open_data(
-            "NEE", time_range=("2002-01-01", "2002-12-31"), bbox=[0, 40, 10, 50]
+            "FLUXCOM-X-BASE_NEE",
+            time_range=("2002-01-01", "2002-12-31"),
+            bbox=[0, 40, 10, 50],
         )
         self.assertIsInstance(ds, xr.Dataset)
         self.assertCountEqual(["NEE", "land_fraction"], list(ds.data_vars))
@@ -125,12 +134,14 @@ class IcosdpDataStoreTest(unittest.TestCase):
 
         # invalid time_range
         with self.assertRaises(DataStoreError) as cm:
-            _ = store.open_data("NEE", time_range=("2004-01-01", "2002-12-31"))
+            _ = store.open_data(
+                "FLUXCOM-X-BASE_NEE", time_range=("2004-01-01", "2002-12-31")
+            )
         self.assertIn("Invalid time range ", f"{cm.exception}")
 
         # invalid bbox
         with self.assertRaises(DataStoreError) as cm:
-            _ = store.open_data("NEE", bbox=(0, 45, 10, 40))
+            _ = store.open_data("FLUXCOM-X-BASE_NEE", bbox=(0, 45, 10, 40))
         self.assertIn("Invalid bbox ", f"{cm.exception}")
 
     def test_search_data(self):

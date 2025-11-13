@@ -41,10 +41,11 @@ from xcube.util.jsonschema import (
 from .constants import (
     CACHE_FOLDER_NAME,
     ICOSDP_DATA_OPENER_ID,
-    SELECTION_PARAMS,
+    SPATIOTEMPORAL_PARAMS,
     FluxcomBaseDataIdsUri,
 )
 from .preload import IcosdpPreloadHandle
+from .utils import _flatten_time_hour
 
 
 class IcosdpDataStore(DataStore):
@@ -57,11 +58,11 @@ class IcosdpDataStore(DataStore):
         cache_store_id: str = "file",
         cache_store_params: dict = None,
     ):
-        self.meta = None
-        self.data = None
+        self._icos_meta = None
+        self._icos_data = None
         if email and password:
-            self._icos_meta, self._icos_data = icoscp_core.icos.bootstrap.fromCredentials(
-                email, password
+            self._icos_meta, self._icos_data = (
+                icoscp_core.icos.bootstrap.fromCredentials(email, password)
             )
         # cache store for preloaded datasets
         if cache_store_params is None:
@@ -76,24 +77,33 @@ class IcosdpDataStore(DataStore):
         params = dict(
             email=JsonStringSchema(
                 title="E-mail address of ICOS user account",
-                description="E-mail used when signing in at https://cpauth.icos-cp.eu/login/",
+                description=(
+                    "E-mail used when signing in at https://cpauth.icos-cp.eu/login/. "
+                    "This is only needed if the aggregated datasets want to be "
+                    "accessed via `preload_data`."
+                ),
             ),
             password=JsonStringSchema(
                 title="Password of ICOS user account",
-                description="Password used when signing in at https://cpauth.icos-cp.eu/login/",
+                description=(
+                    "Password used when signing in at https://cpauth.icos-cp.eu/login/. "
+                    "This is only needed if the aggregated datasets want to be "
+                    "accessed via `preload_data`."
+                ),
             ),
             cache_store_id=JsonStringSchema(
                 title="Store ID of cache data store.",
                 description=(
-                    "Store ID of a filesystem-based data store implemented in xcube."
+                    "The cache data store is a filesystem-based data store implemented "
+                    "in xcube, which is used to store the preloaded data."
                 ),
                 default="file",
             ),
             cache_store_params=JsonObjectSchema(
                 title="Store parameters of cache data store.",
                 description=(
-                    "Store parameters of a filesystem-based data store"
-                    "implemented in xcube."
+                    "The available parameters can be viewed using "
+                    "`get_data_store_params_schema(cache_store_id)`."
                 ),
                 default=dict(root=CACHE_FOLDER_NAME, max_depth=10),
             ),
@@ -114,12 +124,12 @@ class IcosdpDataStore(DataStore):
     def get_data_ids(
         self, data_type: DataTypeLike = None, include_attrs: Container[str] = None
     ) -> Iterator[str | tuple[str, dict[str, Any]] | None]:
-        data_ids = vars(FluxcomBaseDataIdsUri).keys()
+        data_ids = FluxcomBaseDataIdsUri.datasets.keys()
         for data_id in data_ids:
             yield data_id
 
     def has_data(self, data_id: str, data_type: str = None) -> bool:
-        return data_id in vars(FluxcomBaseDataIdsUri).keys()
+        return data_id in FluxcomBaseDataIdsUri.datasets.keys()
 
     def describe_data(
         self, data_id: str, data_type: DataTypeLike = None
@@ -148,8 +158,18 @@ class IcosdpDataStore(DataStore):
     def get_open_data_params_schema(
         self, data_id: str = None, opener_id: str = None
     ) -> JsonObjectSchema:
+        params = dict(
+            flatten_time=JsonBooleanSchema(
+                title="Flatten time and hour dimensions",
+                description=(
+                    "If enabled, combines the 'time' and 'hour' dimensions into a "
+                    "single datetime axis."
+                ),
+            ),
+        )
+        params.update(SPATIOTEMPORAL_PARAMS)
         return JsonObjectSchema(
-            properties=dict(**SELECTION_PARAMS),
+            properties=dict(**params),
             required=[],
             additional_properties=False,
         )
@@ -167,36 +187,31 @@ class IcosdpDataStore(DataStore):
         schema = self.get_open_data_params_schema(data_id=data_id, opener_id=opener_id)
         schema.validate_instance(open_params)
 
-        agg_mode = open_params.get("agg_mode", "005_hourly")
-        if agg_mode == "005_hourly":
-            ds = xr.open_dataset(
-                FluxcomBaseDataIdsUri.datasets[data_id].agg_mode[agg_mode],
-                engine="zarr",
-                chunks={},
-            )
-            ds = ds.unify_chunks()
-            time_range = open_params.get("time_range")
-            if time_range:
-                dt_start = np.datetime64(time_range[0], "ns")
-                dt_end = np.datetime64(time_range[1], "ns")
-                if dt_end <= dt_start:
-                    raise DataStoreError(
-                        f"Invalid time range {time_range!r}. Start date must be before end date."
-                    )
-                ds = ds.sel(time=slice(dt_start, dt_end))
-            bbox = open_params.get("bbox")
-            if bbox:
-                if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
-                    raise DataStoreError(
-                        f"Invalid bbox {bbox!r}. West must be smaller East and South must be smaller North."
-                    )
-                ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
-            return ds
-        else:
-            DataStoreError(
-                "The aggregated datasets publsihed via ICOS Data Portal cannot be "
-                "accessed lazily. Please use the method `preload_data`."
-            )
+        ds = xr.open_dataset(
+            FluxcomBaseDataIdsUri.datasets[data_id].agg_mode["005_hourly"],
+            engine="zarr",
+            chunks={},
+        )
+        ds = ds.unify_chunks()
+        time_range = open_params.get("time_range")
+        if time_range:
+            dt_start = np.datetime64(time_range[0], "ns")
+            dt_end = np.datetime64(time_range[1], "ns")
+            if dt_end <= dt_start:
+                raise DataStoreError(
+                    f"Invalid time range {time_range!r}. Start date must be before end date."
+                )
+            ds = ds.sel(time=slice(dt_start, dt_end))
+        bbox = open_params.get("bbox")
+        if bbox:
+            if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
+                raise DataStoreError(
+                    f"Invalid bbox {bbox!r}. West must be smaller East and South must be smaller North."
+                )
+            ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
+        if open_params.get("flatten_time", False):
+            ds = _flatten_time_hour(ds)
+        return ds
 
     def preload_data(self, *data_ids: str, **preload_params) -> PreloadedDataStore:
         if not data_ids:
@@ -205,12 +220,12 @@ class IcosdpDataStore(DataStore):
         schema = self.get_preload_data_params_schema()
         schema.validate_instance(preload_params)
 
-        if "agg_mode" in preload_params:
-            if preload_params["agg_mode"] == "005_hourly":
-                DataStoreError(
-                    "The non-aggregated datasets is available as Zarr dataset "
-                    "and can be accessed lazily. Please use the method `open_data`."
-                )
+        if self._icos_meta is None:
+            raise DataStoreError(
+                "To preload the aggregated datasets, please provide e-mail and "
+                "password of your ICOS account when initiating the data store with "
+                "`new_data_store('icosdp', email='xxx', password='xxx')`"
+            )
 
         self.cache_store.preload_handle = IcosdpPreloadHandle(
             self.cache_store,
@@ -223,6 +238,27 @@ class IcosdpDataStore(DataStore):
 
     def get_preload_data_params_schema(self) -> JsonObjectSchema:
         params = dict(
+            agg_mode=JsonStringSchema(
+                title="Aggregation mode",
+                description=(
+                    "Four aggregation modes are published in the ICOS FLUXCOM-X-BASE "
+                    "collection. View e.g. https://meta.icos-cp.eu/collections/vvQKmP2OJRY-B-vIl-YXIHFs"
+                ),
+                enum=[
+                    "050_monthly",
+                    "025_monthlycycle",
+                    "025_daily",
+                    "005_monthly",
+                ],
+            ),
+            flatten_time=JsonBooleanSchema(
+                title="Flatten time and hour dimensions",
+                description=(
+                    "If enabled, combines the 'time' and 'hour' dimensions into a "
+                    "single datetime axis. This option is available only when "
+                    "`agg_mode='025_monthlycycle'`."
+                ),
+            ),
             blocking=JsonBooleanSchema(
                 title="Switch to make the preloading process blocking or "
                 "non-blocking",
@@ -248,7 +284,7 @@ class IcosdpDataStore(DataStore):
                 items=JsonIntegerSchema(),
             ),
         )
-        params.update(SELECTION_PARAMS)
+        params.update(SPATIOTEMPORAL_PARAMS)
         return JsonObjectSchema(
             properties=dict(**params),
             required=["agg_mode"],

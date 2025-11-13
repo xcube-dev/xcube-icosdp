@@ -28,7 +28,7 @@ DATA_STORE_ID = "icosdp"
 LOG = logging.getLogger("xcube.icosdp")
 ICOSDP_DATA_OPENER_ID = "dataset:zarr:icosdp"
 
-CACHE_FOLDER_NAME = "icospd_cache"
+CACHE_FOLDER_NAME = "icosdp_cache"
 TEMP_PROCESSING_FOLDER = "icosdp_temp"
 
 
@@ -82,19 +82,7 @@ class FluxcomBaseDataIdsUri:
     }
 
 
-SELECTION_PARAMS = dict(
-    agg_mode=JsonStringSchema(
-        title="Aggregation mode",
-        description="Note that '005_hourly' is the non-aggregated dataset.",
-        enum=[
-            "005_hourly",
-            "050_monthly",
-            "025_monthlycycle",
-            "025_daily",
-            "005_monthly",
-        ],
-        default="005_hourly",
-    ),
+SPATIOTEMPORAL_PARAMS = dict(
     time_range=JsonDateSchema.new_range(
         min_date="2001-01-01", max_date="2021-12-31", nullable=True
     ),

@@ -24,8 +24,7 @@ from xcube.core.store import DataStoreError, PreloadedDataStore, new_data_store
 from xcube.core.store.preload import ExecutorPreloadHandle, PreloadState, PreloadStatus
 
 from .constants import TEMP_PROCESSING_FOLDER, FluxcomBaseDataIdsUri
-
-_CHUNK_SIZE = 1024 * 1024
+from .utils import _flatten_time_hour
 
 
 class IcosdpPreloadHandle(ExecutorPreloadHandle):
@@ -138,6 +137,8 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
                     f"be smaller North."
                 )
             ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
+        if preload_params.get("flatten_time", False):
+            ds = _flatten_time_hour(ds)
 
         # write cube
         format_id = preload_params.get("format_id", "zarr")
@@ -147,7 +148,7 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
                 for (dim, chunk) in zip(ds.dims, preload_params["chunks"])
             }
             ds = chunk_dataset(ds, chunks, format_name=format_id)
-        data_id_out = f"{var_name}_{freq}"
+        data_id_out = f"{data_id}_{freq}"
         if "time_range" in preload_params:
             data_id_out += f"_{year_start}_{year_end}"
         if format_id == "netcdf":
@@ -162,7 +163,13 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
             )
         )
         self._cache_store.write_data(ds, data_id_out, replace=True)
-        self.notify(PreloadState(data_id, progress=1.0, message="Preload finished"))
+        self.notify(
+            PreloadState(
+                data_id,
+                progress=1.0,
+                message=f"Datacube written to {data_id_out!r}.",
+            )
+        )
 
         # delete temp storage
         self._clean_up()
