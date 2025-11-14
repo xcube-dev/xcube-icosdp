@@ -85,7 +85,7 @@ To access them, users must [create an account](https://cpauth.icos-cp.eu/login/?
 and provide their registered email address and password to the data store.  Note that
 the authentication process does **not** support lazy loading of the dataset. Therefore,
 the data must be **preloaded**, which involves downloading the global annual datasets
-and constructing a 3-D data cube from them.
+and constructing a unified data cube from them by stacking along the time axis.
 
 Example: access the **NEE** flux from the moonthly aggregate for 2015 to 2021
 over a custom bounding box:
