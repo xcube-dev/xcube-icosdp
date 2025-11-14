@@ -15,14 +15,79 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
 import logging
+from dataclasses import dataclass
+
+from xcube.util.jsonschema import JsonArraySchema, JsonDateSchema, JsonNumberSchema
 
 DATA_STORE_ID = "icosdp"
 LOG = logging.getLogger("xcube.icosdp")
-
-MAPPING_NONAGG_DATA_ID_URI = dict(
-    NEE="https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/NEE",
-    GPP="https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/GPP",
-    ET="https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/ET",
-    ET_T="https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/ET_T",
-)
 ICOSDP_DATA_OPENER_ID = "dataset:zarr:icosdp"
+
+CACHE_FOLDER_NAME = "icosdp_cache"
+TEMP_PROCESSING_FOLDER = "icosdp_temp"
+
+
+@dataclass
+class FluxcomDataset:
+    """Represents all aggregation modes for a Fluxcom variable."""
+
+    agg_mode: dict[str, str]
+
+
+class FluxcomBaseDataIdsUri:
+    """Container for all Fluxcom variables and their aggregation modes."""
+
+    datasets: dict[str, FluxcomDataset] = {
+        "FLUXCOM-X-BASE_NEE": FluxcomDataset(
+            agg_mode={
+                "005_hourly": "https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/NEE",
+                "050_monthly": "https://meta.icos-cp.eu/collections/X_-p994BqVSG6nWJkeK1ALjW",
+                "025_monthlycycle": "https://meta.icos-cp.eu/collections/X_-p994BqVSG6nWJkeK1ALjW",
+                "025_daily": "https://meta.icos-cp.eu/collections/X_-p994BqVSG6nWJkeK1ALjW",
+                "005_monthly": "https://meta.icos-cp.eu/collections/X_-p994BqVSG6nWJkeK1ALjW",
+            }
+        ),
+        "FLUXCOM-X-BASE_GPP": FluxcomDataset(
+            agg_mode={
+                "005_hourly": "https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/GPP",
+                "050_monthly": "https://meta.icos-cp.eu/collections/AYj7-lwcdCLnBXJDoscxQZou",
+                "025_monthlycycle": "https://meta.icos-cp.eu/collections/AYj7-lwcdCLnBXJDoscxQZou",
+                "025_daily": "https://meta.icos-cp.eu/collections/AYj7-lwcdCLnBXJDoscxQZou",
+                "005_monthly": "https://meta.icos-cp.eu/collections/AYj7-lwcdCLnBXJDoscxQZou",
+            }
+        ),
+        "FLUXCOM-X-BASE_ET": FluxcomDataset(
+            agg_mode={
+                "005_hourly": "https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/ET",
+                "050_monthly": "https://meta.icos-cp.eu/collections/_l85vWiIV81AifoxCkty50YI",
+                "025_monthlycycle": "https://meta.icos-cp.eu/collections/_l85vWiIV81AifoxCkty50YI",
+                "025_daily": "https://meta.icos-cp.eu/collections/_l85vWiIV81AifoxCkty50YI",
+                "005_monthly": "https://meta.icos-cp.eu/collections/_l85vWiIV81AifoxCkty50YI",
+            }
+        ),
+        "FLUXCOM-X-BASE_ET_T": FluxcomDataset(
+            agg_mode={
+                "005_hourly": "https://swift.dkrz.de/v1/dkrz_a1e106384d7946408b9724b59858a536/fluxcom-x/FLUXCOMxBase/ET_T",
+                "050_monthly": "https://meta.icos-cp.eu/collections/aCBG-AZIJtCCia7bhMYWin1-",
+                "025_monthlycycle": "https://meta.icos-cp.eu/collections/aCBG-AZIJtCCia7bhMYWin1-",
+                "025_daily": "https://meta.icos-cp.eu/collections/aCBG-AZIJtCCia7bhMYWin1-",
+                "005_monthly": "https://meta.icos-cp.eu/collections/aCBG-AZIJtCCia7bhMYWin1-",
+            }
+        ),
+    }
+
+
+SPATIOTEMPORAL_PARAMS = dict(
+    time_range=JsonDateSchema.new_range(
+        min_date="2001-01-01", max_date="2021-12-31", nullable=True
+    ),
+    bbox=JsonArraySchema(
+        title="Bounding box [west, south, east, north] in degree",
+        items=(
+            JsonNumberSchema(minimum=-180, maximum=180),
+            JsonNumberSchema(minimum=-90, maximum=90),
+            JsonNumberSchema(minimum=-180, maximum=180),
+            JsonNumberSchema(minimum=-90, maximum=90),
+        ),
+    ),
+)

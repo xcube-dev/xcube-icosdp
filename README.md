@@ -22,10 +22,10 @@ For details on FLUXCOM-X-BASE data products, see:
 
 X-BASE contains four flux variables:
 
-- **NEE** — Net Ecosystem Exchange
-- **GPP** — Gross Primary Productivity
-- **ET** — Evapotranspiration
-- **ET_T** — Transpiration
+- **FLUXCOM-X-BASE_NEE** — Net Ecosystem Exchange
+- **FLUXCOM-X-BASE_GPP** — Gross Primary Productivity
+- **FLUXCOM-X-BASE_ET** — Evapotranspiration
+- **FLUXCOM-X-BASE_ET_T** — Transpiration
 
 To improve usability, the data is available through:
 
@@ -43,6 +43,24 @@ The data is stored in **Zarr** format on a publicly accessible object storage ho
 [DKRZ](https://www.dkrz.de/en/dkrz-partner-for-climate-research?set_language=en).
 It is **cloud-optimized**, allowing efficient spatial and temporal subsetting.
 No authentication is required to access the dataset.
+
+#### Using the `xcube-icosdp` Data Store to access the full-resolution dataset
+
+Example: open the **NEE** flux for 2020–2021 over a custom bounding box:
+
+```python
+from xcube.core.store import new_data_store
+
+store = new_data_store("icosdp")
+ds = store.open_data(
+    data_id="FLUXCOM-X-BASE_NEE",
+    time_range=("2020-01-01", "2021-12-31"),
+    bbox=[5, 45, 10, 50]  # lon_min, lat_min, lon_max, lat_max
+)
+```
+
+🌐 Public data — no authentication required at this time.
+📖 [Example notebook](examples/access_fluxcomxbase.ipynb)
 
 
 ### Aggregated Products
@@ -62,28 +80,33 @@ Current aggregations:
 
 All files include `land_fraction`.
 
----
+The aggregated products are available exclusively through the [ICOS Data Portal](https://www.icos-cp.eu/data-services/about-data-portal).
+To access them, users must [create an account](https://cpauth.icos-cp.eu/login/?targetUrl=https%3A%2F%2Fwww.icos-cp.eu%2Fdata-services%2Fabout-data-portal)
+and provide their registered email address and password to the data store.  Note that
+the authentication process does **not** support lazy loading of the dataset. Therefore,
+the data must be **preloaded**, which involves downloading the global annual datasets
+and constructing a unified data cube from them by stacking along the time axis.
 
-## Using the `xcube-icosdp` Data Store
-
-Example: open the **NEE** flux for 2020–2021 over a custom bounding box:
+Example: access the **NEE** flux from the moonthly aggregate for 2015 to 2021
+over a custom bounding box:
 
 ```python
 from xcube.core.store import new_data_store
 
-store = new_data_store("icosdp")
-ds = store.open_data(
-    data_id="NEE",
-    time_range=("2020-01-01", "2021-12-31"),
-    bbox=[5, 45, 10, 50]  # lon_min, lat_min, lon_max, lat_max
+store = new_data_store("icosdp", email="xxx", password="xxx")
+cache_store = store.preload_data(
+    "FLUXCOM-X-BASE_NEE",
+    agg_mode="050_monthly",
+    time_range=("2015-01-01", "2021-12-31"),
+    bbox=[5, 45, 10, 50],
 )
+ds = cache_store.open_data("FLUXCOM-X-BASE_NEE_monthly_2015_2021.zarr")
 ```
 
-🌐 Public data — no authentication required at this time.
+🌐 Public data — authentication via ICOS account required.
 📖 [Example notebook](examples/access_fluxcomxbase.ipynb)
 
-> 💡 Note: Authentication-based access for aggregated ICOS datasets will be supported
-> in a future release. Additional workflows will be documented in new example notebooks.
+---
 
 ## Installing the xcube-icosdp plugin
 
@@ -163,3 +186,20 @@ To produce an HTML
 ```bash
 pytest --cov-report html --cov=xcube_icosdp
 ```
+
+### Some notes on the strategy of unit-testing <a name="unittest_strategy"></a>
+
+The unit test suite uses [pytest-recording](https://pypi.org/project/pytest-recording/)
+to mock https requests via the Python library `requests`. During development an
+actual HTTP request is performed and the responses are saved in `cassettes/**.yaml`
+files. During testing, only the `cassettes/**.yaml` files are used without an actual
+HTTP request. During development, to save the responses to `cassettes/**.yaml`, run
+
+```bash
+pytest -v -s --record-mode new_episodes
+```
+Note that `--record-mode new_episodes` overwrites all cassettes. If one only
+wants to write cassettes which are not saved already, `--record-mode once` can be used.
+[pytest-recording](https://pypi.org/project/pytest-recording/) supports all records
+modes given by [VCR.py](https://vcrpy.readthedocs.io/en/latest/usage.html#record-modes).
+After recording the cassettes, testing can be then performed as usual.

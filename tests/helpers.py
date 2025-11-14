@@ -71,9 +71,3 @@ def get_hourly_005_dataseet():
         },
     )
     return ds
-
-
-from xcube.core.store import new_data_store
-
-store = new_data_store("icosdp")
-store.describe_data("NEE")
