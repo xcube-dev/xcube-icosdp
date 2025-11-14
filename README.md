@@ -118,52 +118,32 @@ but note that installation may be significantly slower with conda than with
 mamba. If using conda rather than mamba, replace the `mamba` command with
 `conda` in the installation commands given below.
 
-### Installation into a new environment with mamba
+### Installation into a new environment with pip
 
-This method creates a new environment and installs the latest conda-forge
-release of xcube-icosdp, along with all its required dependencies, into the
-newly created environment.
+This method creates a new environment and installs the latest [PyPi](https://pypi.org/project/xcube-icosdp/)
+release of xcube-icosdp, along with all its required dependencies.
 
 To do so, execute the following commands:
 
 ```bash
-mamba create --name xcube-icosdp --channel conda-forge xcube-icosdp
-mamba activate xcube-icosdp
+pip install xcube-icosdp
 ```
 
-The name of the environment may be freely chosen.
-
-### Installation into an existing environment with mamba
-
-This method assumes that you have an existing environment, and you want
-to install xcube-icosdp into it.
-
-With the existing environment activated, execute this command:
-
-```bash
-mamba install --channel conda-forge xcube-icosdp
-```
-
-Once again, xcube and any other necessary dependencies will be installed
-automatically if they are not already installed.
-
-> Note till here will come soon
-
-### Installation into an existing environment from the repository
+### Installation from the repository
 
 If you want to install xcube-icosdp directly from the git repository (for example
 in order to use an unreleased version or to modify the code), you can
 do so as follows:
 
 ```bash
-mamba create --name xcube-icosdp --channel conda-forge --only-deps xcube-icosdp
+mamba create -f environment.yml
 mamba activate xcube-icosdp
 git clone https://github.com/xcube-dev/xcube-icosdp.git
 python -m pip install --no-deps --editable xcube-icosdp/
 ```
 
 This installs all the dependencies of xcube-icosdp into a fresh conda environment,
-then installs xcube-icosdp into this environment from the repository.
+then installs xcube-icosdp in editable mode into this environment from the repository.
 
 ## Testing <a name="testing"></a>
 
