@@ -63,6 +63,8 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
 
     def close(self) -> None:
         self._clean_up()
+        if self._cache_fs.isdir(self._cache_root):
+            self._cache_fs.rm(self._cache_root, recursive=True)
 
     def preload_data(self, data_id: str, **preload_params):
         uri = FluxcomBaseDataIdsUri.datasets[data_id].agg_mode[
@@ -126,30 +128,35 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
         data_ids_sel = [did for did in data_ids_temp if re.match(pattern, did)]
         dss = []
         for did in data_ids_sel:
-            ds = self._process_store.open_data(did, chunks={})
+            ds = self._process_store.open_data(did, chunks="auto")
             dss.append(ds)
         ds = xr.concat(dss, dim="time")
         bbox = preload_params.get("bbox")
         if bbox:
             if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
                 raise DataStoreError(
-                    f"Invalid bbox {bbox!r}. West must be smaller East and South must "
-                    f"be smaller North."
+                    f"Invalid bbox {bbox!r}. West must be smaller than East and "
+                    f"South must be smaller than North."
                 )
             ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
-        if preload_params.get("flatten_time", False):
+        if (
+            preload_params.get("flatten_time", False)
+            and preload_params["agg_mode"] == "025_monthlycycle"
+        ):
             ds = _flatten_time_hour(ds)
 
         # write cube
-        format_id = preload_params.get("format_id", "zarr")
+        format_id = preload_params.get("target_format", "zarr")
         if "chunks" in preload_params:
             chunks = {
                 str(dim): chunk
                 for (dim, chunk) in zip(ds.dims, preload_params["chunks"])
             }
             ds = chunk_dataset(ds, chunks, format_name=format_id)
+        # noinspection PyUnboundLocalVariable
         data_id_out = f"{data_id}_{freq}"
         if "time_range" in preload_params:
+            # noinspection PyUnboundLocalVariable
             data_id_out += f"_{year_start}_{year_end}"
         if format_id == "netcdf":
             data_id_out += ".nc"
@@ -162,6 +169,7 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
                 message="Write data",
             )
         )
+        # noinspection PyUnresolvedReferences
         self._cache_store.write_data(ds, data_id_out, replace=True)
         self.notify(
             PreloadState(

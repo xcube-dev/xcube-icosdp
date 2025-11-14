@@ -17,12 +17,7 @@
 import logging
 from dataclasses import dataclass
 
-from xcube.util.jsonschema import (
-    JsonArraySchema,
-    JsonDateSchema,
-    JsonNumberSchema,
-    JsonStringSchema,
-)
+from xcube.util.jsonschema import JsonArraySchema, JsonDateSchema, JsonNumberSchema
 
 DATA_STORE_ID = "icosdp"
 LOG = logging.getLogger("xcube.icosdp")

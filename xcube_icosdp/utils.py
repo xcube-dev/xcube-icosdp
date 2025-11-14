@@ -26,7 +26,8 @@ def _flatten_time_hour(ds: xr.Dataset) -> xr.Dataset:
         dtype="datetime64[ns]",
     )
     ds_stacked = ds.stack({"time_new": ("time", "hour")})
-    ds_stacked = ds_stacked.drop_vars(["time_new", "time", "hour"])
+    ds_stacked = ds_stacked.drop_vars(["time_new", "time", "hour", "hour_bnds"])
     ds_stacked = ds_stacked.rename({"time_new": "time"})
     ds_stacked = ds_stacked.assign_coords({"time": date_times})
+    ds_stacked = ds_stacked.transpose("time", "lat", "lon", ...)
     return ds_stacked

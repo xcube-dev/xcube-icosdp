@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
-
+import pytest
 import unittest
 from unittest.mock import patch
 
@@ -126,10 +126,11 @@ class IcosdpDataStoreTest(unittest.TestCase):
             "FLUXCOM-X-BASE_NEE",
             time_range=("2002-01-01", "2002-12-31"),
             bbox=[0, 40, 10, 50],
+            flatten_time=True,
         )
         self.assertIsInstance(ds, xr.Dataset)
         self.assertCountEqual(["NEE", "land_fraction"], list(ds.data_vars))
-        self.assertEqual((365, 24, 200, 200), ds["NEE"].shape)
+        self.assertEqual((365 * 24, 200, 200), ds["NEE"].shape)
         self.assertEqual((200, 200), ds["land_fraction"].shape)
 
         # invalid time_range
@@ -143,6 +144,73 @@ class IcosdpDataStoreTest(unittest.TestCase):
         with self.assertRaises(DataStoreError) as cm:
             _ = store.open_data("FLUXCOM-X-BASE_NEE", bbox=(0, 45, 10, 40))
         self.assertIn("Invalid bbox ", f"{cm.exception}")
+
+    def test_preload_data_error(self):
+        # raise error if no email and password
+        with self.assertRaises(DataStoreError) as cm:
+            store = new_data_store(DATA_STORE_ID)
+            _ = store.preload_data("FLUXCOM-X-BASE_NEE", agg_mode="050_monthly")
+        msg = (
+            "To preload the aggregated datasets, please provide e-mail and "
+            "password of your ICOS account when initiating the data store with "
+        )
+        self.assertIn(msg, f"{cm.exception}")
+
+    def test_preload_data_error_data_ids(self):
+        # raise error if no email and password
+        with self.assertRaises(ValueError) as cm:
+            store = new_data_store(DATA_STORE_ID)
+            _ = store.preload_data(agg_mode="050_monthly")
+        self.assertIn("At least one `data_id` must be provided.", f"{cm.exception}")
+
+    @pytest.mark.vcr()
+    def test_preload_data(self):
+        store = new_data_store(
+            "icosdp",
+            email="xxx",
+            password="xxx",
+        )
+        cache_store = store.preload_data(
+            "FLUXCOM-X-BASE_NEE",
+            agg_mode="050_monthly",
+            time_range=("2020-01-01", "2021-12-31"),
+            bbox=[5, 45, 10, 50],
+            chunks=(2, 10, 10),
+            silent=True,
+        )
+        self.assertCountEqual(
+            ["FLUXCOM-X-BASE_NEE_monthly_2020_2021.zarr"], cache_store.list_data_ids()
+        )
+        ds = cache_store.open_data("FLUXCOM-X-BASE_NEE_monthly_2020_2021.zarr")
+        self.assertEqual((24, 10, 10), ds["NEE"].shape)
+        self.assertEqual(
+            [2, 10, 10],
+            [
+                ds.chunksizes["time"][0],
+                ds.chunksizes["lat"][0],
+                ds.chunksizes["lon"][0],
+            ],
+        )
+
+        # safe as netcdf
+        cache_store = store.preload_data(
+            "FLUXCOM-X-BASE_NEE",
+            agg_mode="050_monthly",
+            time_range=("2020-01-01", "2021-12-31"),
+            bbox=[5, 45, 10, 50],
+            target_format="netcdf",
+            silent=True,
+        )
+        self.assertCountEqual(
+            [
+                "FLUXCOM-X-BASE_NEE_monthly_2020_2021.zarr",
+                "FLUXCOM-X-BASE_NEE_monthly_2020_2021.nc",
+            ],
+            cache_store.list_data_ids(),
+        )
+        ds = cache_store.open_data("FLUXCOM-X-BASE_NEE_monthly_2020_2021.nc")
+        self.assertEqual((24, 10, 10), ds["NEE"].shape)
+        cache_store.preload_handle.close()
 
     def test_search_data(self):
         store = new_data_store(DATA_STORE_ID)

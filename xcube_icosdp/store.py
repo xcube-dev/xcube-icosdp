@@ -165,6 +165,7 @@ class IcosdpDataStore(DataStore):
                     "If enabled, combines the 'time' and 'hour' dimensions into a "
                     "single datetime axis."
                 ),
+                default=False,
             ),
         )
         params.update(SPATIOTEMPORAL_PARAMS)
@@ -199,14 +200,16 @@ class IcosdpDataStore(DataStore):
             dt_end = np.datetime64(time_range[1], "ns")
             if dt_end <= dt_start:
                 raise DataStoreError(
-                    f"Invalid time range {time_range!r}. Start date must be before end date."
+                    f"Invalid time range {time_range!r}. "
+                    f"Start date must be before end date."
                 )
             ds = ds.sel(time=slice(dt_start, dt_end))
         bbox = open_params.get("bbox")
         if bbox:
             if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
                 raise DataStoreError(
-                    f"Invalid bbox {bbox!r}. West must be smaller East and South must be smaller North."
+                    f"Invalid bbox {bbox!r}. West must be smaller than East and "
+                    f"South must be smaller than North."
                 )
             ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
         if open_params.get("flatten_time", False):
@@ -258,6 +261,7 @@ class IcosdpDataStore(DataStore):
                     "single datetime axis. This option is available only when "
                     "`agg_mode='025_monthlycycle'`."
                 ),
+                default=False,
             ),
             blocking=JsonBooleanSchema(
                 title="Switch to make the preloading process blocking or "
