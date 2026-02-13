@@ -1,3 +1,10 @@
+## Changes in 0.1.1 (under development)
+
+- Skip requests for datasets that are already preloaded to avoid redundant processing.
+- Ensure consistent chunk sizes for preloaded datasets.
+  Default chunking is now `(1, 1800, 1800)` for `(time, lat, lon)`.
+
+
 ## Changes in 0.1.0
 
 - Initial release of `xcube-icosdp`.

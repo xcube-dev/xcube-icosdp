@@ -61,12 +61,17 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
         self._data_ids = data_ids
         super().__init__(data_ids=data_ids, **preload_params)
 
+        # delete temp storage
+        self._clean_up()
+
     def close(self) -> None:
         self._clean_up()
         if self._cache_fs.isdir(self._cache_root):
             self._cache_fs.rm(self._cache_root, recursive=True)
 
     def preload_data(self, data_id: str, **preload_params):
+        force_preload = preload_params.get("force_preload", False)
+
         uri = FluxcomBaseDataIdsUri.datasets[data_id].agg_mode[
             preload_params["agg_mode"]
         ]
@@ -86,101 +91,105 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
             if not meta_years:
                 raise DataStoreError(f"No data found for {time_range}.")
 
-        # download data
-        self.notify(
-            PreloadState(
-                data_id,
-                status=PreloadStatus.started,
-                progress=0.0,
-                message="Download in progress",
-            )
-        )
-        num_file = len(meta_years)
-        for i, meta_year in enumerate(meta_years):
-            year_objs = self._icos_meta.get_collection_meta(meta_year.res).members
-            spatial_res, freq = preload_params["agg_mode"].split("_")
-            spatial_res = str(int(spatial_res) / 100)
-            if freq == "monthlycycle":
-                freq_sel = "monthly diurnal cycle"
-            else:
-                freq_sel = freq
-            year_objs_sel = [
-                year_obj
-                for year_obj in year_objs
-                if spatial_res in year_obj.name and freq_sel in year_obj.name
-            ]
-            assert len(year_objs_sel) == 1
-            year_obj = year_objs_sel[0]
-            self._icos_data.save_to_folder(year_obj.res, self._process_root)
-            self.notify(PreloadState(data_id, progress=0.6 * (i + 1) / num_file))
-
-        # build cube
-        self.notify(
-            PreloadState(
-                data_id,
-                progress=0.6,
-                message="Prepare data",
-            )
-        )
-        var_name = data_id.replace("FLUXCOM-X-BASE_", "")
-        data_ids_temp = self._process_store.list_data_ids()
-        pattern = re.compile(rf"^{var_name}_[0-9]{{4}}")
-        data_ids_sel = [did for did in data_ids_temp if re.match(pattern, did)]
-        dss = []
-        for did in data_ids_sel:
-            ds = self._process_store.open_data(did, chunks="auto")
-            dss.append(ds)
-        ds = xr.concat(dss, dim="time")
-        bbox = preload_params.get("bbox")
-        if bbox:
-            if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
-                raise DataStoreError(
-                    f"Invalid bbox {bbox!r}. West must be smaller than East and "
-                    f"South must be smaller than North."
-                )
-            ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
-        if (
-            preload_params.get("flatten_time", False)
-            and preload_params["agg_mode"] == "025_monthlycycle"
-        ):
-            ds = _flatten_time_hour(ds)
-
-        # write cube
-        format_id = preload_params.get("target_format", "zarr")
-        if "chunks" in preload_params:
-            chunks = {
-                str(dim): chunk
-                for (dim, chunk) in zip(ds.dims, preload_params["chunks"])
-            }
-            ds = chunk_dataset(ds, chunks, format_name=format_id)
-        # noinspection PyUnboundLocalVariable
+        # build output data ID
+        spatial_res, freq = preload_params["agg_mode"].split("_")
         data_id_out = f"{data_id}_{freq}"
         if "time_range" in preload_params:
             # noinspection PyUnboundLocalVariable
             data_id_out += f"_{year_start}_{year_end}"
+        format_id = preload_params.get("target_format", "zarr")
         if format_id == "netcdf":
             data_id_out += ".nc"
         else:
             data_id_out += ".zarr"
-        self.notify(
-            PreloadState(
-                data_id,
-                progress=0.7,
-                message="Write data",
-            )
-        )
-        # noinspection PyUnresolvedReferences
-        self._cache_store.write_data(ds, data_id_out, replace=True)
-        self.notify(
-            PreloadState(
-                data_id,
-                progress=1.0,
-                message=f"Datacube written to {data_id_out!r}.",
-            )
-        )
 
-        # delete temp storage
-        self._clean_up()
+        # check if already preloaded
+        if data_id_out in self._cache_store.get_data_ids() and not force_preload:
+            self.notify(
+                PreloadState(
+                    data_id,
+                    message="Already preloaded",
+                )
+            )
+        else:
+            # download data
+            self.notify(
+                PreloadState(
+                    data_id,
+                    status=PreloadStatus.started,
+                    progress=0.0,
+                    message="Download in progress",
+                )
+            )
+            num_file = len(meta_years)
+            for i, meta_year in enumerate(meta_years):
+                year_objs = self._icos_meta.get_collection_meta(meta_year.res).members
+                spatial_res, freq = preload_params["agg_mode"].split("_")
+                spatial_res = str(int(spatial_res) / 100)
+                if freq == "monthlycycle":
+                    freq_sel = "monthly diurnal cycle"
+                else:
+                    freq_sel = freq
+                year_objs_sel = [
+                    year_obj
+                    for year_obj in year_objs
+                    if spatial_res in year_obj.name and freq_sel in year_obj.name
+                ]
+                assert len(year_objs_sel) == 1
+                year_obj = year_objs_sel[0]
+                self._icos_data.save_to_folder(year_obj.res, self._process_root)
+                self.notify(PreloadState(data_id, progress=0.6 * (i + 1) / num_file))
+
+            # build cube
+            self.notify(
+                PreloadState(
+                    data_id,
+                    progress=0.6,
+                    message="Prepare data",
+                )
+            )
+            var_name = data_id.replace("FLUXCOM-X-BASE_", "")
+            data_ids_temp = self._process_store.list_data_ids()
+            pattern = re.compile(rf"^{var_name}_[0-9]{{4}}")
+            data_ids_sel = [did for did in data_ids_temp if re.match(pattern, did)]
+            dss = []
+            for did in data_ids_sel:
+                ds = self._process_store.open_data(did, chunks="auto")
+                dss.append(ds)
+            ds = xr.concat(dss, dim="time")
+            bbox = preload_params.get("bbox")
+            if bbox is not None:
+                ds = ds.sel(lat=slice(bbox[3], bbox[1]), lon=slice(bbox[0], bbox[2]))
+            if (
+                preload_params.get("flatten_time", False)
+                and preload_params["agg_mode"] == "025_monthlycycle"
+            ):
+                ds = _flatten_time_hour(ds)
+
+            # write cube
+            chunksize = preload_params.get("chunks", (1, 1800, 1800))
+            chunks = {
+                str(dim): chunk
+                for (dim, chunk) in zip(("time", "lat", "lon"), chunksize)
+            }
+            ds = chunk_dataset(ds, chunks, format_name=format_id)
+            # noinspection PyUnboundLocalVariable
+            self.notify(
+                PreloadState(
+                    data_id,
+                    progress=0.7,
+                    message="Write data",
+                )
+            )
+            # noinspection PyUnresolvedReferences
+            self._cache_store.write_data(ds, data_id_out, replace=True)
+            self.notify(
+                PreloadState(
+                    data_id,
+                    progress=1.0,
+                    message=f"Datacube written to {data_id_out!r}.",
+                )
+            )
 
     def _clean_up(self) -> None:
         if self._process_fs.isdir(self._process_root):
