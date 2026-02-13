@@ -26,6 +26,8 @@ ICOSDP_DATA_OPENER_ID = "dataset:zarr:icosdp"
 CACHE_FOLDER_NAME = "icosdp_cache"
 TEMP_PROCESSING_FOLDER = "icosdp_temp"
 
+DEFAULT_CHUNKSIZES = (1, 1800, 1800)
+
 
 @dataclass
 class FluxcomDataset:

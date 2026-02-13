@@ -23,7 +23,7 @@ from xcube.core.chunk import chunk_dataset
 from xcube.core.store import DataStoreError, PreloadedDataStore, new_data_store
 from xcube.core.store.preload import ExecutorPreloadHandle, PreloadState, PreloadStatus
 
-from .constants import TEMP_PROCESSING_FOLDER, FluxcomBaseDataIdsUri
+from .constants import DEFAULT_CHUNKSIZES, TEMP_PROCESSING_FOLDER, FluxcomBaseDataIdsUri
 from .utils import _flatten_time_hour
 
 
@@ -167,7 +167,7 @@ class IcosdpPreloadHandle(ExecutorPreloadHandle):
                 ds = _flatten_time_hour(ds)
 
             # write cube
-            chunksize = preload_params.get("chunks", (1, 1800, 1800))
+            chunksize = preload_params.get("chunks", DEFAULT_CHUNKSIZES)
             chunks = {
                 str(dim): chunk
                 for (dim, chunk) in zip(("time", "lat", "lon"), chunksize)
