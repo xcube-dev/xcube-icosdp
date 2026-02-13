@@ -8,7 +8,7 @@ dependencies:
   - numpy
   - pandas
   - xarray
-  - xcube
+  - xcube >=1.13.0
   # Development Dependencies - Tools
   - black
   - isort
