@@ -14,4 +14,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
-version = "0.1.1.dev0"
+version = "0.1.1"

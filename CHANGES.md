@@ -1,4 +1,4 @@
-## Changes in 0.1.1 (under development)
+## Changes in 0.1.1
 
 - Skip requests for datasets that are already preloaded to avoid redundant processing.
 - Ensure consistent chunk sizes for preloaded datasets.
