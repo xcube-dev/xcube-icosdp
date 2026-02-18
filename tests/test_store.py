@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
-import pytest
+import io
 import unittest
 from unittest.mock import patch
 
+import pytest
 import xarray as xr
 from xcube.core.store import (
     DatasetDescriptor,
@@ -163,10 +164,18 @@ class IcosdpDataStoreTest(unittest.TestCase):
             _ = store.preload_data(agg_mode="050_monthly")
         self.assertIn("At least one `data_id` must be provided.", f"{cm.exception}")
 
+    def test_preload_data_error_invalid_bbox(self):
+        store = new_data_store(DATA_STORE_ID)
+        with self.assertRaises(DataStoreError) as cm:
+            _ = store.preload_data(
+                "FLUXCOM-X-BASE_NEE", agg_mode="050_monthly", bbox=[100, 4, 40, 10]
+            )
+        self.assertIn("Invalid bbox", f"{cm.exception}")
+
     @pytest.mark.vcr()
     def test_preload_data(self):
         store = new_data_store(
-            "icosdp",
+            DATA_STORE_ID,
             email="xxx",
             password="xxx",
         )
@@ -191,6 +200,19 @@ class IcosdpDataStoreTest(unittest.TestCase):
                 ds.chunksizes["lon"][0],
             ],
         )
+
+        # check for already preloaded
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            _ = store.preload_data(
+                "FLUXCOM-X-BASE_NEE",
+                agg_mode="050_monthly",
+                time_range=("2020-01-01", "2021-12-31"),
+                bbox=[5, 45, 10, 50],
+                chunks=(2, 10, 10),
+            )
+            output = mock_stdout.getvalue()
+
+        self.assertIn("Already preloaded", output)
 
         # safe as netcdf
         cache_store = store.preload_data(

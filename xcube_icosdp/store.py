@@ -223,6 +223,14 @@ class IcosdpDataStore(DataStore):
         schema = self.get_preload_data_params_schema()
         schema.validate_instance(preload_params)
 
+        bbox = preload_params.get("bbox")
+        if bbox:
+            if bbox[0] >= bbox[2] or bbox[1] >= bbox[3]:
+                raise DataStoreError(
+                    f"Invalid bbox {bbox!r}. West must be smaller than East and "
+                    f"South must be smaller than North."
+                )
+
         if self._icos_meta is None:
             raise DataStoreError(
                 "To preload the aggregated datasets, please provide e-mail and "
@@ -283,8 +291,8 @@ class IcosdpDataStore(DataStore):
                 default="zarr",
             ),
             chunks=JsonArraySchema(
-                title="Chunk sizes for each dimension of the preloaded datasets.",
-                description="An iterable with length same as number of dimensions.",
+                title="Chunk sizes for the preloaded datasets.",
+                description="An iterable for dims (time, lat, lon).",
                 items=JsonIntegerSchema(),
             ),
         )
