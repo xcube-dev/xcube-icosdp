@@ -28,7 +28,7 @@ X-BASE contains four flux variables:
 
 To improve usability, the data is available through:
 
-✅ Native resolution via cloud-optimized access (spatial/temporal subsetting)
+✅ Native resolution via cloud-optimized access (spatial/temporal subsetting)  
 ✅ Pre-computed spatial & temporal aggregations
 
 
@@ -59,7 +59,7 @@ ds = store.open_data(
 ```
 
 🌐 Public data — no authentication required at this time.
-📖 [Example notebook](examples/access_fluxcomxbase.ipynb)
+📖 [Example notebook](examples/access_fluxcom_x_base.ipynb)
 
 
 ### Aggregated Products
