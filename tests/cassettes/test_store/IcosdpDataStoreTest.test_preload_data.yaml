@@ -308,11 +308,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:22 GMT
+      - Fri, 20 Nov 2026 17:08:30 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -574,21 +578,25 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:22 GMT
+      - Fri, 20 Nov 2026 17:08:30 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
 - request:
-    body: mail=eo.lincs%40gmail.com&password=3%60YA%28U%29Zh%5BQSz
+    body: mail=eo.lincs%40gmail.com&password=3%60YA%28U%29Zh%5Bs%C3%84q
     headers:
       Connection:
       - close
       Content-Length:
-      - '56'
+      - '61'
       Content-Type:
       - application/x-www-form-urlencoded
       Host:
@@ -608,11 +616,11 @@ interactions:
       Content-Type:
       - text/plain; charset=UTF-8
       Date:
-      - Wed, 18 Mar 2026 14:48:23 GMT
+      - Fri, 20 Nov 2026 17:08:30 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Set-Cookie:
-      - cpauthToken=WzE3NzM5NDUzMDMzNTUsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGUCME5KCpJz2yL2ksmKW9TPok0WsCQXMUZrhcD8mpnvT+F1E6IAUmIpN+1uV4hiqpv9KQIxAIFm9EnKYijcG3+bfXfa9g4RNR0ZhcOzPDzHCn2c1BDiprN0BDZ4aEp0ETjdLxU5CQ==;
+      - cpauthToken=WzE3OTUyOTQ1MTA5ODQsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGYCMQCp18yMdsXunkTdIuCPrbiarnd5n2RO2LTk5rv+ldAcQ6hGzMPPQmTm4U6a0wDNb5cCMQCHUdcHE0NARMNFEs0CoSpJhqA56xMfZdLtYycQ7yIIS+XD0/XAZ/yX7pYTBaWr1TI=;
         Domain=.icos-cp.eu; Path=/; Secure; HttpOnly
       Strict-Transport-Security:
       - max-age=63072000
@@ -625,7 +633,7 @@ interactions:
       Connection:
       - close
       Cookie:
-      - cpauthToken=WzE3NzM5NDUzMDMzNTUsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGUCME5KCpJz2yL2ksmKW9TPok0WsCQXMUZrhcD8mpnvT+F1E6IAUmIpN+1uV4hiqpv9KQIxAIFm9EnKYijcG3+bfXfa9g4RNR0ZhcOzPDzHCn2c1BDiprN0BDZ4aEp0ETjdLxU5CQ==;
+      - cpauthToken=WzE3OTUyOTQ1MTA5ODQsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGYCMQCp18yMdsXunkTdIuCPrbiarnd5n2RO2LTk5rv+ldAcQ6hGzMPPQmTm4U6a0wDNb5cCMQCHUdcHE0NARMNFEs0CoSpJhqA56xMfZdLtYycQ7yIIS+XD0/XAZ/yX7pYTBaWr1TI=;
       Host:
       - data.icos-cp.eu
       User-Agent:
@@ -91806,7 +91814,7 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Wed, 18 Mar 2026 14:48:23 GMT
+      - Fri, 20 Nov 2026 17:08:31 GMT
       ETag:
       - '"a092f38d5b1dc583"'
       Last-Modified:
@@ -92076,11 +92084,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:39 GMT
+      - Fri, 20 Nov 2026 17:08:33 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -92090,7 +92102,7 @@ interactions:
       Connection:
       - close
       Cookie:
-      - cpauthToken=WzE3NzM5NDUzMDMzNTUsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGUCME5KCpJz2yL2ksmKW9TPok0WsCQXMUZrhcD8mpnvT+F1E6IAUmIpN+1uV4hiqpv9KQIxAIFm9EnKYijcG3+bfXfa9g4RNR0ZhcOzPDzHCn2c1BDiprN0BDZ4aEp0ETjdLxU5CQ==;
+      - cpauthToken=WzE3OTUyOTQ1MTA5ODQsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGYCMQCp18yMdsXunkTdIuCPrbiarnd5n2RO2LTk5rv+ldAcQ6hGzMPPQmTm4U6a0wDNb5cCMQCHUdcHE0NARMNFEs0CoSpJhqA56xMfZdLtYycQ7yIIS+XD0/XAZ/yX7pYTBaWr1TI=;
       Host:
       - data.icos-cp.eu
       User-Agent:
@@ -183260,7 +183272,7 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Wed, 18 Mar 2026 14:48:39 GMT
+      - Fri, 20 Nov 2026 17:08:33 GMT
       ETag:
       - '"2562f38d5b1e7244"'
       Last-Modified:
@@ -183581,11 +183593,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:41 GMT
+      - Fri, 20 Nov 2026 17:08:36 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -183898,11 +183914,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:41 GMT
+      - Fri, 20 Nov 2026 17:08:36 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -184164,11 +184184,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:41 GMT
+      - Fri, 20 Nov 2026 17:08:36 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -184178,7 +184202,7 @@ interactions:
       Connection:
       - close
       Cookie:
-      - cpauthToken=WzE3NzM5NDUzMDMzNTUsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGUCME5KCpJz2yL2ksmKW9TPok0WsCQXMUZrhcD8mpnvT+F1E6IAUmIpN+1uV4hiqpv9KQIxAIFm9EnKYijcG3+bfXfa9g4RNR0ZhcOzPDzHCn2c1BDiprN0BDZ4aEp0ETjdLxU5CQ==;
+      - cpauthToken=WzE3OTUyOTQ1MTA5ODQsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGYCMQCp18yMdsXunkTdIuCPrbiarnd5n2RO2LTk5rv+ldAcQ6hGzMPPQmTm4U6a0wDNb5cCMQCHUdcHE0NARMNFEs0CoSpJhqA56xMfZdLtYycQ7yIIS+XD0/XAZ/yX7pYTBaWr1TI=;
       Host:
       - data.icos-cp.eu
       User-Agent:
@@ -275359,7 +275383,7 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Wed, 18 Mar 2026 14:48:41 GMT
+      - Fri, 20 Nov 2026 17:08:36 GMT
       ETag:
       - '"a092f38d5b1dc583"'
       Last-Modified:
@@ -275629,11 +275653,15 @@ interactions:
       Content-Type:
       - application/json
       Date:
-      - Wed, 18 Mar 2026 14:48:42 GMT
+      - Fri, 20 Nov 2026 17:08:40 GMT
       Server:
       - nginx/1.18.0 (Ubuntu)
       Strict-Transport-Security:
       - max-age=63072000
+      Vary:
+      - Accept, Accept-Charset
+      X-Cache:
+      - HIT
     status:
       code: 200
       message: OK
@@ -275643,7 +275671,7 @@ interactions:
       Connection:
       - close
       Cookie:
-      - cpauthToken=WzE3NzM5NDUzMDMzNTUsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGUCME5KCpJz2yL2ksmKW9TPok0WsCQXMUZrhcD8mpnvT+F1E6IAUmIpN+1uV4hiqpv9KQIxAIFm9EnKYijcG3+bfXfa9g4RNR0ZhcOzPDzHCn2c1BDiprN0BDZ4aEp0ETjdLxU5CQ==;
+      - cpauthToken=WzE3OTUyOTQ1MTA5ODQsImVvLmxpbmNzQGdtYWlsLmNvbSIsIlBhc3N3b3JkIl0eMGYCMQCp18yMdsXunkTdIuCPrbiarnd5n2RO2LTk5rv+ldAcQ6hGzMPPQmTm4U6a0wDNb5cCMQCHUdcHE0NARMNFEs0CoSpJhqA56xMfZdLtYycQ7yIIS+XD0/XAZ/yX7pYTBaWr1TI=;
       Host:
       - data.icos-cp.eu
       User-Agent:
@@ -366813,7 +366841,7 @@ interactions:
       Content-Type:
       - application/octet-stream
       Date:
-      - Wed, 18 Mar 2026 14:48:42 GMT
+      - Fri, 20 Nov 2026 17:08:41 GMT
       ETag:
       - '"2562f38d5b1e7244"'
       Last-Modified:

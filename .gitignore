@@ -131,6 +131,7 @@ dmypy.json
 # IDEs
 
 .idea/
+.vscode/
 
 
 examples/icosdp_cache/
